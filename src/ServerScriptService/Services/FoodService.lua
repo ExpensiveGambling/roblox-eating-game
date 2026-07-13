@@ -30,6 +30,7 @@ local function getFoodToolTemplate(zoneId)
 	return toolsFolder:FindFirstChild(zone.FoodTheme[1])
 end
 
+-- Food tools are identified by the presence of a ZoneId attribute (set on the template in Init.server.lua).
 local function removeExistingFoodTool(player)
 	local backpack = player:FindFirstChild("Backpack")
 	if backpack then

@@ -1,0 +1,12 @@
+{
+  "Name": "Baseplate",
+  "ClassName": "Part",
+  "Properties": {
+    "Size": { "Vector3": [2048, 16, 2048] },
+    "Position": { "Vector3": [0, -6, 0] },
+    "Anchored": true,
+    "CanCollide": true,
+    "Color": { "Color3": [0.356863, 0.356863, 0.356863] },
+    "Transparency": 0
+  }
+}

@@ -57,9 +57,9 @@ New/changed files:
 - `src/ReplicatedStorage/Modules/Config/GameplayConfig.lua` — **new**. Holds non-zone-specific
   tunables, starting with `EAT_COOLDOWN_SEC`.
 - `src/Workspace/FoodTables/Zone1Table.model.json` — **new**. Rojo JSON-model placeholder table with
-  a `ProximityPrompt` child and a `ZoneId` attribute.
+  a `ProximityPrompt` child (the `ZoneId` attribute is set programmatically, not in this file — see Amendment).
 - `src/ReplicatedStorage/Assets/FoodTools/Broccoli.model.json` — **new**. Rojo JSON-model placeholder
-  `Tool` with a `Handle` Part, tagged with a `ZoneId` attribute.
+  `Tool` with a `Handle` Part (the `ZoneId` attribute is set programmatically, not in this file — see Amendment).
 - `default.project.json` — **updated** to add a `Workspace` → `src/Workspace` mapping (currently
   absent).
 - `CLAUDE.md` (this project's) — **updated** after implementation to reflect `FoodService` and
@@ -144,9 +144,9 @@ exists in the world without needing a live Studio/MCP connection, addressing the
 multi-session continuity concern.
 
 - `Zone1Table.model.json`: a `Part` (placeholder block) with a child `ProximityPrompt`
-  (`ActionText = "Pick Up"`, `ObjectText = "Broccoli"`) and attribute `ZoneId = 1`.
+  (`ActionText = "Pick Up"`, `ObjectText = "Broccoli"`); the `ZoneId` attribute is set programmatically, not in this file — see Amendment.
 - `Broccoli.model.json`: a `Tool` with a `Handle` Part (placeholder block sized/shaped roughly like a
-  held item) and attribute `ZoneId = 1`.
+  held item); the `ZoneId` attribute is set programmatically, not in this file — see Amendment.
 
 Placeholder `CFrame`/`Size` values are hand-picked reasonable defaults, not visually tuned in the
 Studio viewport. If the table or tool is later repositioned/resized visually in Studio, that change

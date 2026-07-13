@@ -3,10 +3,12 @@
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
-      "$path": "src/ServerScriptService"
+      "$path": "src/ServerScriptService",
+      "$ignoreUnknownInstances": true
     },
     "ReplicatedStorage": {
-      "$path": "src/ReplicatedStorage"
+      "$path": "src/ReplicatedStorage",
+      "$ignoreUnknownInstances": true
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {

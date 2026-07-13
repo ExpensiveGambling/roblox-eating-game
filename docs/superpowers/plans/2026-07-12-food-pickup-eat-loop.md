@@ -886,6 +886,7 @@ this plan's Global Constraints, not a gap.
 `FoodService.HandleEatAttempt(player, tool)` signatures are identical everywhere they're referenced
 (Task 4's own steps and its Interfaces block). `EconomyService.GrantEatReward(player, zoneId)` matches
 between Task 3 and Task 4. `PlayerDataService.AddCoins/AddMass(player, amount)` matches between Task 2
+and Task 3.
 
 **Amendment consistency (added during implementation):** the `ZoneId` attribute mechanism changed from
 Rojo `.model.json` `Attributes` (didn't work) to `Instance:SetAttribute` in `Init.server.lua` (Task 5,
@@ -893,4 +894,3 @@ confirmed working including surviving `:Clone()`). Task 1's `.model.json` files,
 verification, Task 4's verification (temporary manual `SetAttribute` fixture), and Task 5's boot script
 and verification were all updated together for this — no task still references the old
 `.model.json`-based mechanism as if it worked.
-and Task 3.
