@@ -12,6 +12,9 @@
       "StarterPlayerScripts": {
         "$path": "src/StarterPlayer/StarterPlayerScripts"
       }
+    },
+    "Workspace": {
+      "$path": "src/Workspace"
     }
   }
 }

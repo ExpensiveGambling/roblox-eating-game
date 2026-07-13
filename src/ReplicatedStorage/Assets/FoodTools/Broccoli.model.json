@@ -1,0 +1,23 @@
+{
+  "Name": "Broccoli",
+  "ClassName": "Tool",
+  "Properties": {
+    "RequiresHandle": true,
+    "CanBeDropped": false
+  },
+  "Attributes": {
+    "ZoneId": 1
+  },
+  "Children": [
+    {
+      "Name": "Handle",
+      "ClassName": "Part",
+      "Properties": {
+        "Size": { "Vector3": [1, 1, 1] },
+        "Anchored": false,
+        "CanCollide": false,
+        "Color": { "Color3": [0.13, 0.55, 0.13] }
+      }
+    }
+  ]
+}
