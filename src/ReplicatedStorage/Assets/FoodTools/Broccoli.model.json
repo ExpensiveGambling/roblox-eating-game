@@ -5,7 +5,7 @@
     "RequiresHandle": true,
     "CanBeDropped": false
   },
-  "Attributes": {
+  "$attributes": {
     "ZoneId": 1
   },
   "Children": [

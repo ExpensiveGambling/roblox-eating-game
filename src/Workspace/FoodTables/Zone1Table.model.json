@@ -8,7 +8,7 @@
     "CanCollide": true,
     "Color": { "Color3": [0.4, 0.25, 0.15] }
   },
-  "Attributes": {
+  "$attributes": {
     "ZoneId": 1
   },
   "Children": [
