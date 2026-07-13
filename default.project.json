@@ -1,0 +1,17 @@
+{
+  "name": "RobloxEatingGame",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$path": "src/ServerScriptService"
+    },
+    "ReplicatedStorage": {
+      "$path": "src/ReplicatedStorage"
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    }
+  }
+}
