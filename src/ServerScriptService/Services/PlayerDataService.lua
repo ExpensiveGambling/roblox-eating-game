@@ -47,10 +47,6 @@ local function copyDefaultProfile()
 end
 
 local function mergeWithDefaults(saved)
-	if type(saved) ~= "table" then
-		return copyDefaultProfile()
-	end
-
 	local profile = copyDefaultProfile()
 	for key in DEFAULT_PROFILE do
 		if saved[key] ~= nil then
@@ -76,8 +72,10 @@ local function loadProfile(userId)
 		if ok then
 			if result == nil then
 				return copyDefaultProfile(), true
+			elseif type(result) == "table" then
+				return mergeWithDefaults(result), true
 			end
-			return mergeWithDefaults(result), true
+			result = ("unexpected data type: %s"):format(type(result))
 		end
 
 		warn(
