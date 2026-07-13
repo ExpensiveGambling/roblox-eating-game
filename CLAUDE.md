@@ -122,7 +122,7 @@ src/
   ServerScriptService/
     Init.server.lua            -- boot sequence, requires + starts every Service
     Services/
-      PlayerDataService.lua   -- owns the in-memory PlayerProfile cache + leaderstats (DataStore I/O deferred)
+      PlayerDataService.lua   -- owns the PlayerProfile cache, leaderstats, and DataStore persistence
       EconomyService.lua      -- owns all Coin/Mass grants
       FoodService.lua         -- food pickup (ProximityPrompt) + eat (Tool.Activated) wiring
       GachaService.lua        -- crate pulls, pity, inventory grants
