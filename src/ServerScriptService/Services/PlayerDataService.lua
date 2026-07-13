@@ -175,7 +175,9 @@ local function onPlayerRemoving(player)
 		end
 	end
 
-	Cache[player.UserId] = nil
+	if Cache[player.UserId] == profile then
+		Cache[player.UserId] = nil
+	end
 end
 
 local function onShutdown()
