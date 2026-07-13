@@ -26,6 +26,21 @@ food per zone" for Zones 2-5 later via config/asset additions only — no new me
   where an animation would eventually play, but no animation is loaded/played yet.
 - Gamepass multipliers (2x Coins/Mass) — Phase 8 in the build order.
 
+## Amendment (2026-07-12, during implementation)
+
+Rojo 7.7.0's `.model.json` format does not apply `Attributes`/`$attributes` from the JSON file in
+this project's environment — confirmed via direct inspection of Rojo's own server-side synced tree
+(not just the Studio plugin), across three different JSON encodings. Regular `Properties` (`Size`,
+`Color`, booleans, etc.) sync correctly; only `Attributes` never reaches the server's tree. Rather than
+depend on unclear/unsupported Rojo behavior, `ZoneId` attributes are set **programmatically** at server
+boot via `Instance:SetAttribute` (in `Init.server.lua`) on the known table/tool instances, instead of
+being authored in the `.model.json` files. This was verified to work reliably, including surviving
+`:Clone()` (attributes set via `SetAttribute` copy to clones exactly like any other attribute). The
+`.model.json` files still define the placeholder table/tool structure and properties — just not the
+`ZoneId` attribute. This keeps the "git is the source of truth, no live-Studio-only state" goal intact
+since the attribute assignment is now plain, readable, git-tracked Luau rather than a JSON field that
+silently did nothing.
+
 ## Architecture
 
 New/changed files:

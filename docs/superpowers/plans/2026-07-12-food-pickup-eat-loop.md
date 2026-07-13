@@ -47,6 +47,15 @@ as an automated test (write the check, run it, confirm the exact expected output
 **Design spec:** `docs/superpowers/specs/2026-07-12-food-pickup-eat-loop-design.md` — read this first
 for the full rationale behind every decision below.
 
+**Amendment discovered during implementation:** Rojo's `.model.json` format does not apply
+`Attributes` from the JSON file in this project's environment (confirmed by inspecting Rojo's own
+server-side synced tree directly, not just Studio). Regular `Properties` sync fine. `ZoneId` attributes
+are therefore set **programmatically** via `Instance:SetAttribute` in `Init.server.lua` (Task 5) instead
+of being authored in the `.model.json` files (Task 1). See the spec's Amendment section for full detail.
+This changes Task 1 (no `Attributes` key in either `.model.json`) and Task 5 (adds the attribute
+bootstrap) from what's below in a few places — those tasks have been updated accordingly; Tasks 2, 3,
+and 6 are unaffected.
+
 ---
 
 ### Task 1: Placeholder world objects — Workspace Rojo mapping, food table, food tool
@@ -57,11 +66,14 @@ for the full rationale behind every decision below.
 - Create: `src/ReplicatedStorage/Assets/FoodTools/Broccoli.model.json`
 
 **Interfaces:**
-- Produces: `Workspace.FoodTables.Zone1Table` (a `Part` with attribute `ZoneId = 1` and a child
-  `ProximityPrompt` named `PickupPrompt`), and
-  `ReplicatedStorage.Assets.FoodTools.Broccoli` (a `Tool` with attribute `ZoneId = 1` and a child
-  `Part` named `Handle`). Later tasks (`FoodService`) read the `ZoneId` attribute off both and clone
-  the `Tool` by name.
+- Produces: `Workspace.FoodTables.Zone1Table` (a `Part` with a child `ProximityPrompt` named
+  `PickupPrompt`), and `ReplicatedStorage.Assets.FoodTools.Broccoli` (a `Tool` with a child `Part`
+  named `Handle`). Neither has a `ZoneId` attribute yet — Rojo's `.model.json` format does not apply
+  `Attributes` in this environment (confirmed by inspecting Rojo's own synced tree; see the plan
+  header's Amendment note). Task 5's `Init.server.lua` sets `ZoneId = 1` on both via
+  `Instance:SetAttribute` at server boot instead. Later tasks (`FoodService`) read that attribute at
+  runtime and clone the `Tool` by name — they don't care how the attribute got set, only that it's
+  present by the time they run.
 
 - [ ] **Step 1: Add the Workspace mapping to `default.project.json`**
 
@@ -134,9 +146,6 @@ user to do this if you don't own that terminal process), then reconnect the plug
     "CanCollide": true,
     "Color": { "Color3": [0.4, 0.25, 0.15] }
   },
-  "Attributes": {
-    "ZoneId": 1
-  },
   "Children": [
     {
       "Name": "PickupPrompt",
@@ -166,9 +175,6 @@ note on keeping live Studio edits in sync with git.
     "RequiresHandle": true,
     "CanBeDropped": false
   },
-  "Attributes": {
-    "ZoneId": 1
-  },
   "Children": [
     {
       "Name": "Handle",
@@ -194,7 +200,6 @@ Use the Roblox Studio MCP `execute_luau` tool to run:
 ```lua
 local table1 = workspace:FindFirstChild("FoodTables") and workspace.FoodTables:FindFirstChild("Zone1Table")
 print("Table exists:", table1 ~= nil)
-print("Table ZoneId:", table1 and table1:GetAttribute("ZoneId"))
 print("Table has prompt:", table1 and table1:FindFirstChild("PickupPrompt") ~= nil)
 
 local tool = game.ReplicatedStorage:FindFirstChild("Assets")
@@ -202,17 +207,21 @@ local tool = game.ReplicatedStorage:FindFirstChild("Assets")
 	and game.ReplicatedStorage.Assets.FoodTools:FindFirstChild("Broccoli")
 print("Tool exists:", tool ~= nil)
 print("Tool ClassName:", tool and tool.ClassName)
-print("Tool ZoneId:", tool and tool:GetAttribute("ZoneId"))
 print("Tool has Handle:", tool and tool:FindFirstChild("Handle") ~= nil)
 ```
-Expected output: `Table exists: true`, `Table ZoneId: 1`, `Table has prompt: true`,
-`Tool exists: true`, `Tool ClassName: Tool`, `Tool ZoneId: 1`, `Tool has Handle: true`.
+Expected output: `Table exists: true`, `Table has prompt: true`, `Tool exists: true`,
+`Tool ClassName: Tool`, `Tool has Handle: true`. Do NOT check `ZoneId` here — it isn't set until
+Task 5's `Init.server.lua` runs; that's expected, not a bug.
 
 If any property failed to apply (e.g. `Size`/`Position`/`Color` came through as zero/default instead
 of the values above), check the terminal running `rojo serve` for a property deserialization error.
 Rojo's JSON model format expects the `{"Vector3": [...]}` / `{"Color3": [...]}` wrapper shown above for
 non-scalar property types — if that's already present and still failing, retry with the bare-array
-form (`"Size": [4, 1, 4]`) instead, since the exact expected encoding can vary by Rojo version.
+form (`"Size": [4, 1, 4]`) instead, since the exact expected encoding can vary by Rojo version. Also
+confirm your changes are actually live-syncing at all: change an unrelated property (e.g. `Color`),
+wait a few seconds, and re-check it in Studio. If it never updates, Rojo/Studio need a restart and
+plugin reconnect before you can trust any further verification in this task — don't proceed on stale
+data.
 
 - [ ] **Step 6: Commit**
 
@@ -476,7 +485,10 @@ git commit -m "Implement EconomyService eat-reward grants from ZoneConfig"
 **Interfaces:**
 - Consumes: `EconomyService.GrantEatReward(player, zoneId)` (Task 3); `ZoneConfig[zoneId].FoodTheme[1]`
   (existing) to resolve the Tool template name; `ReplicatedStorage.Assets.FoodTools.<name>` and
-  `Workspace.FoodTables.*` with their `ZoneId` attributes (Task 1).
+  `Workspace.FoodTables.*` (Task 1). Both read a `ZoneId` attribute at runtime — that attribute isn't
+  set until Task 5's `Init.server.lua` boot script runs (see the plan header's Amendment note), so this
+  task's own verification (Step 3) sets it manually first as a test fixture, matching how this task's
+  verification already manually starts the other services instead of relying on `Init.server.lua`.
 - Produces: `FoodService.Start()`, `FoodService.GivePlayerFood(player: Player, zoneId: number)`,
   `FoodService.HandleEatAttempt(player: Player, tool: Tool)`. `Init.server.lua` (Task 5) calls
   `Start()`; the two other functions are exposed specifically so Play-mode verification (this task and
@@ -627,6 +639,11 @@ PlayerDataService.Start()
 EconomyService.Start()
 FoodService.Start()
 
+-- Test fixture: Init.server.lua (Task 5) is what sets this permanently at real boot.
+-- Set it manually here since this task verifies FoodService in isolation, before Task 5 exists.
+workspace.FoodTables.Zone1Table:SetAttribute("ZoneId", 1)
+game.ReplicatedStorage.Assets.FoodTools.Broccoli:SetAttribute("ZoneId", 1)
+
 local player = Players:GetPlayers()[1]
 assert(player, "No test player in this Play session")
 
@@ -679,10 +696,14 @@ git commit -m "Implement FoodService pickup/eat wiring with per-player cooldown"
 - Create: `src/ServerScriptService/Init.server.lua`
 
 **Interfaces:**
-- Consumes: `PlayerDataService.Start()`, `EconomyService.Start()`, `FoodService.Start()` (Tasks 2–4).
+- Consumes: `PlayerDataService.Start()`, `EconomyService.Start()`, `FoodService.Start()` (Tasks 2–4);
+  `Workspace.FoodTables.Zone1Table` and `ReplicatedStorage.Assets.FoodTools.Broccoli` (Task 1, both
+  exist but neither has `ZoneId` set yet — see the plan header's Amendment note).
 - Produces: nothing further consumed by other tasks — this is the integration point. Runs
   automatically on server boot since it's a `Script` (not a `ModuleScript`) directly under
-  `ServerScriptService`.
+  `ServerScriptService`. Also produces the actual `ZoneId = 1` attribute assignment on both instances
+  above — this is the permanent, real version of the manual `SetAttribute` calls Task 4's own
+  verification used as a temporary test fixture.
 
 - [ ] **Step 1: Implement the boot script**
 
@@ -690,8 +711,12 @@ git commit -m "Implement FoodService pickup/eat wiring with per-player cooldown"
 ```lua
 -- Init.server.lua
 -- Boot sequence: requires and starts every Service, in dependency order.
+-- Also assigns ZoneId attributes to placeholder world objects programmatically, since Rojo's
+-- .model.json format does not apply Attributes from the JSON file in this project's environment
+-- (confirmed during Task 1 — see the design spec's Amendment section for full detail).
 
 local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Services = ServerScriptService.Services
 
@@ -699,16 +724,28 @@ local PlayerDataService = require(Services.PlayerDataService)
 local EconomyService = require(Services.EconomyService)
 local FoodService = require(Services.FoodService)
 
+local function assignZoneAttributes()
+	workspace.FoodTables.Zone1Table:SetAttribute("ZoneId", 1)
+	ReplicatedStorage.Assets.FoodTools.Broccoli:SetAttribute("ZoneId", 1)
+end
+
+assignZoneAttributes()
+
 PlayerDataService.Start()
 EconomyService.Start()
 FoodService.Start()
 ```
 
-- [ ] **Step 2: Confirm it runs without error on server start**
+- [ ] **Step 2: Confirm it runs without error and attributes are set on server start**
 
 Start Play mode via the Roblox Studio MCP `start_stop_play` tool, then check
 `get_console_output` for any red error text mentioning `Init` or any of the three Services. There
-should be none.
+should be none. Then run via `execute_luau` to confirm the attribute assignment actually happened:
+```lua
+print("Table ZoneId:", workspace.FoodTables.Zone1Table:GetAttribute("ZoneId"), "(expected 1)")
+print("Tool ZoneId:", game.ReplicatedStorage.Assets.FoodTools.Broccoli:GetAttribute("ZoneId"), "(expected 1)")
+```
+Expected: both print `1`.
 
 - [ ] **Step 3: Full physical end-to-end verification (this is the spec's real acceptance test)**
 
@@ -849,4 +886,11 @@ this plan's Global Constraints, not a gap.
 `FoodService.HandleEatAttempt(player, tool)` signatures are identical everywhere they're referenced
 (Task 4's own steps and its Interfaces block). `EconomyService.GrantEatReward(player, zoneId)` matches
 between Task 3 and Task 4. `PlayerDataService.AddCoins/AddMass(player, amount)` matches between Task 2
+
+**Amendment consistency (added during implementation):** the `ZoneId` attribute mechanism changed from
+Rojo `.model.json` `Attributes` (didn't work) to `Instance:SetAttribute` in `Init.server.lua` (Task 5,
+confirmed working including surviving `:Clone()`). Task 1's `.model.json` files, Task 1's own
+verification, Task 4's verification (temporary manual `SetAttribute` fixture), and Task 5's boot script
+and verification were all updated together for this — no task still references the old
+`.model.json`-based mechanism as if it worked.
 and Task 3.
