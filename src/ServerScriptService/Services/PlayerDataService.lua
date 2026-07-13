@@ -47,6 +47,10 @@ local function copyDefaultProfile()
 end
 
 local function mergeWithDefaults(saved)
+	if type(saved) ~= "table" then
+		return copyDefaultProfile()
+	end
+
 	local profile = copyDefaultProfile()
 	for key in DEFAULT_PROFILE do
 		if saved[key] ~= nil then
