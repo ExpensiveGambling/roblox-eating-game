@@ -70,9 +70,12 @@ New/changed files:
 5. Player presses `1` (or clicks the Backpack slot) to equip — built-in Roblox behavior, no code
    needed.
 6. Player clicks with the Tool equipped → Roblox fires `Tool.Activated` **server-side natively**.
-7. `FoodService`'s eat handler checks a per-player cooldown (`GameplayConfig.EAT_COOLDOWN_SEC`,
-   keyed by `UserId`, not by Tool instance — this is deliberate so swapping tools can't be used to
-   bypass the cooldown). If the cooldown hasn't elapsed, the click is silently ignored.
+7. `FoodService`'s eat handler reads `ZoneId` from the **Tool's own attribute** (not a closure
+   variable captured at pickup time — reading it fresh off the instance at click time is more robust
+   and consistent with the table's attribute-driven pickup) and checks a per-player cooldown
+   (`GameplayConfig.EAT_COOLDOWN_SEC`, keyed by `UserId`, not by Tool instance — deliberate, so
+   swapping tools can't be used to bypass the cooldown). If the cooldown hasn't elapsed, the click is
+   silently ignored.
 8. If accepted: `EconomyService.GrantEatReward(player, zoneId)` reads
    `ZoneConfig[zoneId].CoinsPerBite` / `.MassPerBite` and calls `PlayerDataService.AddCoins` /
    `.AddMass`.
