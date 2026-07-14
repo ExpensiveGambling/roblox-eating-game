@@ -16,6 +16,15 @@ local FoodService = require(Services.FoodService)
 local function assignZoneAttributes()
 	workspace.FoodTables.Zone1Table:SetAttribute("ZoneId", 1)
 	ReplicatedStorage.Assets.FoodTools.Broccoli:SetAttribute("ZoneId", 1)
+
+	workspace.FoodTables.Zone2Table:SetAttribute("ZoneId", 2)
+	ReplicatedStorage.Assets.FoodTools.Sandwich:SetAttribute("ZoneId", 2)
+
+	for _, wall in workspace.ZoneGates.Zone2Gate:GetChildren() do
+		if wall:IsA("BasePart") then
+			wall:SetAttribute("ZoneId", 2)
+		end
+	end
 end
 
 assignZoneAttributes()

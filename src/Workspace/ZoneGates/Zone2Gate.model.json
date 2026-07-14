@@ -1,0 +1,65 @@
+{
+  "Name": "Zone2Gate",
+  "ClassName": "Model",
+  "Children": [
+    {
+      "Name": "GateWall",
+      "ClassName": "Part",
+      "Properties": {
+        "Size": { "Vector3": [22, 12, 1] },
+        "Position": { "Vector3": [10, 8, 30] },
+        "Anchored": true,
+        "CanCollide": true,
+        "Transparency": 0.7,
+        "Color": { "Color3": [0.8, 0.2, 0.2] }
+      },
+      "Children": [
+        {
+          "Name": "UnlockPrompt",
+          "ClassName": "ProximityPrompt",
+          "Properties": {
+            "ActionText": "Unlock",
+            "ObjectText": "Kitchen",
+            "MaxActivationDistance": 10
+          }
+        }
+      ]
+    },
+    {
+      "Name": "NorthWall",
+      "ClassName": "Part",
+      "Properties": {
+        "Size": { "Vector3": [22, 12, 1] },
+        "Position": { "Vector3": [10, 8, 50] },
+        "Anchored": true,
+        "CanCollide": true,
+        "Transparency": 0.7,
+        "Color": { "Color3": [0.8, 0.2, 0.2] }
+      }
+    },
+    {
+      "Name": "EastWall",
+      "ClassName": "Part",
+      "Properties": {
+        "Size": { "Vector3": [1, 12, 22] },
+        "Position": { "Vector3": [21, 8, 40] },
+        "Anchored": true,
+        "CanCollide": true,
+        "Transparency": 0.7,
+        "Color": { "Color3": [0.8, 0.2, 0.2] }
+      }
+    },
+    {
+      "Name": "WestWall",
+      "ClassName": "Part",
+      "Properties": {
+        "Size": { "Vector3": [1, 12, 22] },
+        "Position": { "Vector3": [-1, 8, 40] },
+        "Anchored": true,
+        "CanCollide": true,
+        "Transparency": 0.7,
+        "Color": { "Color3": [0.8, 0.2, 0.2] }
+      }
+    }
+  ]
+}
