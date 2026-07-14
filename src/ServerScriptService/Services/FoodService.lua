@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ZoneConfig = require(ReplicatedStorage.Modules.Config.ZoneConfig)
 local GameplayConfig = require(ReplicatedStorage.Modules.Config.GameplayConfig)
 local EconomyService = require(script.Parent.EconomyService)
+local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local FoodService = {}
 
@@ -88,14 +89,31 @@ function FoodService.GivePlayerFood(player, zoneId)
 	end)
 end
 
+function FoodService.CanEatFromZone(player, zoneId)
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return false
+	end
+	return table.find(profile.UnlockedZones, zoneId) ~= nil
+end
+
 local function onPromptTriggered(prompt, player)
 	local tableInstance = prompt.Parent
 	if not tableInstance then
 		return
 	end
 
+	local foodTables = workspace:FindFirstChild("FoodTables")
+	if not foodTables or not tableInstance:IsDescendantOf(foodTables) then
+		return
+	end
+
 	local zoneId = tableInstance:GetAttribute("ZoneId")
 	if not zoneId then
+		return
+	end
+
+	if not FoodService.CanEatFromZone(player, zoneId) then
 		return
 	end
 
