@@ -230,6 +230,30 @@ function PlayerDataService.AddMass(player, amount)
 	end
 end
 
+function PlayerDataService.SpendCoins(player, amount)
+	local profile = Cache[player.UserId]
+	if not profile or profile.Coins < amount then
+		return false
+	end
+	profile.Coins -= amount
+	local leaderstats = player:FindFirstChild("leaderstats")
+	if leaderstats then
+		leaderstats.Coins.Value = profile.Coins
+	end
+	return true
+end
+
+function PlayerDataService.UnlockZone(player, zoneId)
+	local profile = Cache[player.UserId]
+	if not profile then
+		return
+	end
+	if table.find(profile.UnlockedZones, zoneId) then
+		return
+	end
+	table.insert(profile.UnlockedZones, zoneId)
+end
+
 function PlayerDataService.Start()
 	Players.PlayerAdded:Connect(onPlayerAdded)
 	Players.PlayerRemoving:Connect(onPlayerRemoving)
