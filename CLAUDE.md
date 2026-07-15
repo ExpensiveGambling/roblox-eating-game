@@ -125,6 +125,7 @@ src/
       PlayerDataService.lua   -- owns the PlayerProfile cache, leaderstats, and DataStore persistence
       EconomyService.lua      -- owns all Coin/Mass grants
       FoodService.lua         -- food pickup (ProximityPrompt) + eat (Tool.Activated) wiring
+      ZoneAccessService.lua   -- per-player CollisionGroup zone walls + unlock-gate purchase flow
       GachaService.lua        -- crate pulls, pity, inventory grants
       RebirthService.lua      -- rebirth eligibility + reset + multiplier
       LeaderboardService.lua  -- OrderedDataStore leaderboard
@@ -141,6 +142,7 @@ src/
     Remotes/                   -- RemoteEvent/RemoteFunction instances
   Workspace/
     FoodTables/                -- placeholder food table Parts, git-tracked as Rojo .model.json
+    ZoneGates/                  -- per-zone unlock wall/gate Models, git-tracked as Rojo .model.json
   StarterPlayer/
     StarterPlayerScripts/      -- client-side UI/controllers
 ```
