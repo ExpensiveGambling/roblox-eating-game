@@ -83,6 +83,35 @@ local function onCharacterAdded(player, character)
 	syncPlayerCollision(player)
 end
 
+-- Waits for PlayerDataService profile to load (up to ~5 seconds with backoff),
+-- then re-syncs collision if character is already present.
+-- Used to handle the race condition where Character spawns before profile loads.
+local function waitForProfileAndSync(player)
+	local maxAttempts = 10
+	local attemptCount = 0
+
+	while attemptCount < maxAttempts do
+		if not player.Parent then
+			-- Player left the game
+			return
+		end
+
+		local profile = PlayerDataService.Get(player)
+		if profile then
+			-- Profile is now available. If character exists, sync collision.
+			if player.Character then
+				syncPlayerCollision(player)
+			end
+			return
+		end
+
+		attemptCount = attemptCount + 1
+		if attemptCount < maxAttempts then
+			task.wait(0.5) -- Wait 0.5 seconds between attempts (~5 seconds total)
+		end
+	end
+end
+
 local function onPlayerAdded(player)
 	pcall(function()
 		PhysicsService:RegisterCollisionGroup(playerGroupName(player))
@@ -95,6 +124,12 @@ local function onPlayerAdded(player)
 	if player.Character then
 		onCharacterAdded(player, player.Character)
 	end
+
+	-- Background retry: if profile loads after character spawn, re-sync collision.
+	-- This fixes the race condition where Character spawns before PlayerDataService.Get completes.
+	task.spawn(function()
+		waitForProfileAndSync(player)
+	end)
 end
 
 local function onPlayerRemoving(player)
