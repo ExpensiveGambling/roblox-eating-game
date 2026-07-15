@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Services = ServerScriptService.Services
 
 local PlayerDataService = require(Services.PlayerDataService)
+local ZoneAccessService = require(Services.ZoneAccessService)
 local EconomyService = require(Services.EconomyService)
 local FoodService = require(Services.FoodService)
 
@@ -30,5 +31,6 @@ end
 assignZoneAttributes()
 
 PlayerDataService.Start()
+ZoneAccessService.Start()
 EconomyService.Start()
 FoodService.Start()
