@@ -126,6 +126,7 @@ src/
       EconomyService.lua      -- owns all Coin/Mass grants
       FoodService.lua         -- food pickup (ProximityPrompt) + eat (Tool.Activated) wiring
       ZoneAccessService.lua   -- per-player CollisionGroup zone walls + unlock-gate purchase flow
+      MassVisualService.lua   -- Mass-driven R15 BodyWidthScale/BodyDepthScale visual scaling
       GachaService.lua        -- crate pulls, pity, inventory grants
       RebirthService.lua      -- rebirth eligibility + reset + multiplier
       LeaderboardService.lua  -- OrderedDataStore leaderboard
@@ -137,6 +138,7 @@ src/
         GachaConfig.lua
         RebirthConfig.lua
         GameplayConfig.lua    -- non-zone-specific tunables (e.g. EAT_COOLDOWN_SEC)
+        MassVisualConfig.lua  -- Mass -> body-scale mapping tunables (min/max scale, cap, tween time)
     Assets/
       FoodTools/               -- Tool templates, git-tracked as Rojo .model.json (e.g. Broccoli.model.json)
     Remotes/                   -- RemoteEvent/RemoteFunction instances
@@ -144,7 +146,10 @@ src/
     FoodTables/                -- placeholder food table Parts, git-tracked as Rojo .model.json
     ZoneGates/                  -- per-zone unlock wall/gate Models, git-tracked as Rojo .model.json
   StarterPlayer/
-    StarterPlayerScripts/      -- client-side UI/controllers
+    StarterPlayerScripts/
+      Init.client.lua          -- boot sequence, requires + starts every client Controller
+      Controllers/
+        CurrencyHUDController.lua -- top-right Coins/Mass HUD, reads leaderstats directly
 ```
 
 **Naming:** PascalCase for scripts/modules, camelCase for variables/functions, ALL_CAPS for constants in config modules.
