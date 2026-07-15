@@ -16,8 +16,16 @@ local ZoneAccessService = require(Services.ZoneAccessService)
 local EconomyService = require(Services.EconomyService)
 local FoodService = require(Services.FoodService)
 
--- Cap MaxPlayers to stay under Roblox's 32-CollisionGroup-per-place limit
-Players.MaxPlayers = GameplayConfig.MAX_PLAYERS
+-- Enforce player cap to stay under Roblox's 32-CollisionGroup-per-place limit
+-- (1 Default + up to 26 players + up to 4 gated zones [Zones 2-5])
+-- Players beyond MAX_PLAYERS are kicked before any Service processes them.
+local function enforcePlayerCap(player)
+	if #Players:GetPlayers() > GameplayConfig.MAX_PLAYERS then
+		player:Kick("Server is full — please try another server.")
+	end
+end
+
+Players.PlayerAdded:Connect(enforcePlayerCap)
 
 local function assignZoneAttributes()
 	workspace.FoodTables.Zone1Table:SetAttribute("ZoneId", 1)
