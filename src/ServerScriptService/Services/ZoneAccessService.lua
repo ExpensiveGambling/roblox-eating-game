@@ -4,8 +4,10 @@
 
 local Players = game:GetService("Players")
 local PhysicsService = game:GetService("PhysicsService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local ZoneConfig = require(ReplicatedStorage.Modules.Config.ZoneConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local ZoneAccessService = {}
@@ -138,9 +140,84 @@ local function onPlayerRemoving(player)
 	end)
 end
 
+function ZoneAccessService.TryUnlockZone(player, zoneId)
+	local zone = ZoneConfig[zoneId]
+	if not zone then
+		return false
+	end
+
+	local profile = PlayerDataService.Get(player)
+	if not profile then
+		return false
+	end
+
+	if table.find(profile.UnlockedZones, zoneId) then
+		return false
+	end
+
+	if not table.find(profile.UnlockedZones, zoneId - 1) then
+		return false
+	end
+
+	if not PlayerDataService.SpendCoins(player, zone.UnlockCost) then
+		return false
+	end
+
+	PlayerDataService.UnlockZone(player, zoneId)
+
+	local wallGroup = zoneWallGroups[zoneId]
+	if wallGroup then
+		PhysicsService:CollisionGroupSetCollidable(playerGroupName(player), wallGroup, false)
+	end
+
+	return true
+end
+
+local function onGatePromptTriggered(prompt, player)
+	local gate = prompt.Parent
+	if not gate then
+		return
+	end
+
+	local zoneGates = workspace:FindFirstChild("ZoneGates")
+	if not zoneGates or not gate:IsDescendantOf(zoneGates) then
+		return
+	end
+
+	local zoneId = gate:GetAttribute("ZoneId")
+	if not zoneId then
+		return
+	end
+
+	ZoneAccessService.TryUnlockZone(player, zoneId)
+end
+
+-- Sets each gate prompt's display text from ZoneConfig, so balancing changes never require
+-- re-editing the .model.json placeholder files.
+local function setGatePromptText()
+	local zoneGates = workspace:FindFirstChild("ZoneGates")
+	if not zoneGates then
+		return
+	end
+
+	for _, prompt in zoneGates:GetDescendants() do
+		if prompt:IsA("ProximityPrompt") then
+			local gate = prompt.Parent
+			local zoneId = gate and gate:GetAttribute("ZoneId")
+			local zone = zoneId and ZoneConfig[zoneId]
+			if zone then
+				prompt.ObjectText = zone.Name
+				prompt.ActionText = ("Unlock (%d Coins)"):format(zone.UnlockCost)
+			end
+		end
+	end
+end
+
 function ZoneAccessService.Start()
 	setUpZoneWallGroups()
+	setGatePromptText()
 
+	ProximityPromptService.PromptTriggered:Connect(onGatePromptTriggered)
 	Players.PlayerAdded:Connect(onPlayerAdded)
 	Players.PlayerRemoving:Connect(onPlayerRemoving)
 
