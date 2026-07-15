@@ -95,6 +95,13 @@ local function onPlayerAdded(player)
 		mass.Changed:Connect(function(newMass)
 			onMassChanged(player, newMass)
 		end)
+
+		-- The character may have already spawned (and snapped using a stale/zero Mass reading)
+		-- before leaderstats finished loading (e.g. slow DataStore GetAsync). Re-apply the
+		-- now-known-correct scale so a returning high-Mass player is never left stuck skinny.
+		if player.Character then
+			onCharacterAdded(player, player.Character)
+		end
 	end)
 end
 
