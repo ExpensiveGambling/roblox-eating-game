@@ -68,7 +68,7 @@ local function buildHUD()
 	coinsLabel.TextXAlignment = Enum.TextXAlignment.Right
 	coinsLabel.Font = Enum.Font.GothamBold
 	coinsLabel.TextSize = 18
-	coinsLabel.Text = "0 🪙"
+	coinsLabel.Text = "Coins: 0"
 	coinsLabel.Parent = pill
 
 	local massLabel = Instance.new("TextLabel")
@@ -79,7 +79,7 @@ local function buildHUD()
 	massLabel.TextXAlignment = Enum.TextXAlignment.Right
 	massLabel.Font = Enum.Font.GothamBold
 	massLabel.TextSize = 18
-	massLabel.Text = "0.0 ⚖️"
+	massLabel.Text = "Mass: 0.0"
 	massLabel.Parent = pill
 
 	screenGui.Parent = player:WaitForChild("PlayerGui")
@@ -95,11 +95,11 @@ function CurrencyHUDController.Start()
 	local mass = leaderstats:WaitForChild("Mass")
 
 	local function updateCoins()
-		coinsLabel.Text = formatNumber(coins.Value, 0) .. " 🪙"
+		coinsLabel.Text = "Coins: " .. formatNumber(coins.Value, 0)
 	end
 
 	local function updateMass()
-		massLabel.Text = formatNumber(mass.Value, 1) .. " ⚖️"
+		massLabel.Text = "Mass: " .. formatNumber(mass.Value, 1)
 	end
 
 	coins.Changed:Connect(updateCoins)
