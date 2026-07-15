@@ -6,13 +6,18 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Services = ServerScriptService.Services
+local GameplayConfig = require(ReplicatedStorage.Modules.Config.GameplayConfig)
 
 local PlayerDataService = require(Services.PlayerDataService)
 local ZoneAccessService = require(Services.ZoneAccessService)
 local EconomyService = require(Services.EconomyService)
 local FoodService = require(Services.FoodService)
+
+-- Cap MaxPlayers to stay under Roblox's 32-CollisionGroup-per-place limit
+Players.MaxPlayers = GameplayConfig.MAX_PLAYERS
 
 local function assignZoneAttributes()
 	workspace.FoodTables.Zone1Table:SetAttribute("ZoneId", 1)
