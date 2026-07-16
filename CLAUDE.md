@@ -2,6 +2,62 @@
 
 This file is the persistent context for Claude Code on this project. Read it before starting any session. Update it whenever a system changes — this file should always reflect the current source of truth, not the original plan.
 
+---
+
+## ⏸ TEMPORARY — IN-PROGRESS DESIGN: Mass visual curve rework
+
+**Status as of pause: mid-`superpowers:brainstorming` skill flow. No code has been changed yet.** `MassVisualService.lua` and `MassVisualConfig.lua` are still on the OLD linear formula (`MIN_WIDTH_SCALE=0.7`, `MAX_WIDTH_SCALE=20`, `MASS_AT_MAX_SCALE=1000000000`). Read this whole section before touching either file.
+
+**Why this started:** Live-testing (via the leaderstat-poke technique — set `player.leaderstats.Mass.Value` directly, see item 14 of the Rojo gotchas memory) showed the linear Mass→scale mapping was wrong: no visible size change until ~1,000,000+ Mass, and even then it barely reached "normal" size. Root cause: early-game Mass values (Zone 1 = 0.1/bite, Zone 5 = 30/bite) are microscopic relative to the old `MASS_AT_MAX_SCALE` of 1 billion, so linear interpolation left the whole playable early-mid game visually flat.
+
+**Design decisions already confirmed with the user (do not re-ask these):**
+- No hard cap on size — it should approach the max asymptotically, never a hard-coded clamp/ceiling.
+- Zone 1-2 Mass (tens to low hundreds) → character should be *much* skinnier than the old floor — "comically skinny, paper-thin/2D," roughly 5x skinnier than the old `MIN_WIDTH_SCALE` of 0.7.
+- Zone 3-4 Mass (low thousands) → noticeable growth should have kicked in, landing in a 2-4x size range.
+- Near-max size (the existing 20x ceiling) should only be approached after many rebirths (Mass in the tens of millions+), with clearly diminishing returns — e.g. the visual gain from 5M→10M Mass should be bigger than the gain from 30M→100M Mass.
+- Curve family chosen: a **log-based Hill/logistic curve** — i.e. apply the Hill/logistic saturation formula to `u = ln(1 + Mass)` rather than to raw Mass. Reasoning: Mass spans many orders of magnitude across a player's lifetime (single digits at Zone 1 up to tens/hundreds of millions after many rebirths), and this is the shape that stays flat near zero, ramps sharply around a tunable midpoint, then tapers into a long, genuinely-asymptotic tail (never mathematically hits 1.0, so no explicit clamp is needed) — unlike a plain power curve (which needs an eventual hard clamp once Mass exceeds its reference cap — rejected, contradicts the "no hard cap" decision above) or a manual checkpoint/interpolation table (more tunable per-point but needs its own decision for what happens past the last checkpoint — not chosen).
+
+**Approved formula (this is "Section 1" of the design, already approved by the user):**
+
+```lua
+-- MassVisualConfig.lua (target shape — NOT yet written to disk)
+return {
+    MIN_WIDTH_SCALE = 0.15,        -- was 0.7 -- comically skinny floor ("paper thin")
+    MIN_DEPTH_SCALE = 0.15,
+    MAX_WIDTH_SCALE = 20,          -- unchanged -- asymptotic ceiling, never fully reached
+    MAX_DEPTH_SCALE = 20,
+    GROWTH_MIDPOINT_MASS = 75000,  -- NEW, replaces MASS_AT_MAX_SCALE -- Mass at which t=0.5 ("halfway grown")
+    GROWTH_STEEPNESS = 5.2,        -- NEW -- higher = sharper transition from skinny to big around the midpoint
+    TWEEN_TIME_SEC = 0.6,          -- unchanged
+}
+```
+
+```lua
+-- massToScale formula (target shape — NOT yet written into MassVisualService.lua)
+local function massToScale(mass)
+    local u = math.log(1 + math.max(mass, 0))
+    local midpointU = math.log(1 + MassVisualConfig.GROWTH_MIDPOINT_MASS)
+    local p = MassVisualConfig.GROWTH_STEEPNESS
+    local t = u ^ p / (u ^ p + midpointU ^ p)
+    local width = MassVisualConfig.MIN_WIDTH_SCALE + (MassVisualConfig.MAX_WIDTH_SCALE - MassVisualConfig.MIN_WIDTH_SCALE) * t
+    local depth = MassVisualConfig.MIN_DEPTH_SCALE + (MassVisualConfig.MAX_DEPTH_SCALE - MassVisualConfig.MIN_DEPTH_SCALE) * t
+    return width, depth
+end
+```
+
+`GROWTH_MIDPOINT_MASS`/`GROWTH_STEEPNESS` were solved from a 2-point regression on the anchors above (Mass 100 → t≈0.01, Mass 3,000 → t≈0.15) — they are a **first-pass placeholder**, same spirit as the old `MASS_AT_MAX_SCALE` comment. Sanity-checked outputs: Mass 100 → scale ~0.3, Mass 3,000 → scale ~3, Mass 5M → scale ~17, Mass 30M → scale ~18 (diminishing gains after that, never hits exactly 20). Expect to retune both constants after real playtesting, using the same leaderstat-poke live-testing technique.
+
+**What is NOT done yet — resume here next session:**
+1. "Section 2" of the design (the actual code-change details in `MassVisualService.lua` beyond the formula above, plus a testing/tuning plan) has **not been presented to the user yet**. Re-invoke `superpowers:brainstorming` and continue from presenting Section 2.
+2. No design doc has been written to `docs/superpowers/specs/`.
+3. No user approval of a written spec yet.
+4. `writing-plans` skill has not been invoked.
+5. No files have been edited — `MassVisualConfig.lua` and `MassVisualService.lua` are unchanged on disk.
+
+**Once this feature is fully implemented and verified live in Studio, delete this entire "⏸ TEMPORARY" section from this file.**
+
+---
+
 ## Project Summary
 
 A Roblox "simulator" genre cash-grab game. Core verb: eat food to gain **Coins** (spend currency) and **Mass** (prestige/visual currency). Progress through food-tier zones, rebirth for permanent multipliers, pull gacha crates for pets/auras/titles. Priority is fast turnaround and low art/mechanic complexity — every new feature should reuse existing systems (one click-to-earn loop, one gacha system, one pet-follow script) rather than introducing new mechanics.
@@ -18,6 +74,14 @@ This project syncs to Studio via **Rojo** and also has an **MCP connection** for
 - **Use MCP for live testing, debugging, and inspecting runtime state** (checking a value while a game session is running, confirming an instance exists, reading live errors) — not for permanent changes.
 - **Any Studio change made via MCP that should persist must be written back into the corresponding file in `src/`.** If it only exists in the live Studio session, Rojo will overwrite it on next sync (or it'll be lost when the session ends). Treat live Studio edits as scratch/temporary until they're reflected in a file.
 - When in doubt about which system owns a change, prefer editing the file and letting Rojo sync it, rather than editing Studio directly.
+
+### Asset workflow (models, maps, animations)
+
+`default.project.json` already sets `$ignoreUnknownInstances: true` on `ServerScriptService`, `ReplicatedStorage`, and `Workspace`, so Rojo won't delete ad-hoc Studio-built instances in those trees on sync. That only stops deletion — it does not make the asset version-controlled or safe from place-file loss/corruption. Treat it as a working buffer, not storage.
+
+- **Models/map pieces**: build in Studio, then export to `.rbxm`/`.model.json` under the matching `src/Workspace/...` path and commit to git — same pattern already used for `FoodTables/` and `ZoneGates/`. Known gotcha: `.model.json` does not reliably round-trip Instance **Attributes** — verify after export.
+- **Animations**: not filesystem objects. Studio's Animation Editor publishes them to Roblox as a `KeyframeSequence` asset with a numeric `AnimationId` — there's no local file to sync. Publish once, then commit that `AnimationId` into the relevant config module (e.g. alongside `GameplayConfig.lua`) so it's tracked in git even though the animation data itself lives on Roblox's servers.
+- Don't leave finished assets living only in the `.rbxl`/Studio session long-term — export/commit before considering the work done.
 
 ---
 
